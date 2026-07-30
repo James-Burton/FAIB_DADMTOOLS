@@ -28,6 +28,9 @@ ogr_to_tbl <- function(src,
 
   dbname <- pg_conn_param["dbname"][[1]]
   user <- pg_conn_param["user"][[1]]
+  host <- pg_conn_param["host"][[1]]
+  password <- pg_conn_param["password"][[1]]
+  port <- pg_conn_param["port"][[1]]
 
   # ## Tidy up lyr input
   if(is_blank(lyr)) {
@@ -95,7 +98,11 @@ ogr_to_tbl <- function(src,
               paste('-lco', 'OVERWRITE=YES'),
               '--config PG_USE_COPY YES',
               precision,
-              paste0('-f PostgreSQL PG:dbname=',dbname),
+              paste0('-f PostgreSQL PG:"dbname=', dbname,
+                     ' host=', host,
+                     ' port=', port,
+                     ' user=', user,
+                     ' password=', password, '"'),
               src))
 
   print((system2('ogr2ogr',args=c('-nlt NONE',
@@ -108,7 +115,11 @@ ogr_to_tbl <- function(src,
                                   paste('-lco', 'OVERWRITE=YES'),
                                   '--config PG_USE_COPY YES',
                                   precision,
-                                  paste0('-f PostgreSQL PG:dbname=', dbname),
+                                  paste0('-f PostgreSQL PG:"dbname=', dbname,
+                                         ' host=', host,
+                                         ' port=', port,
+                                         ' user=', user,
+                                         ' password=', password, '"'),
                                   src), stderr = TRUE)))
   print('Import complete, moving to post processing')
 

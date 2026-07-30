@@ -41,7 +41,10 @@ rasterize_gdal <- function(
     if(!is.null(pg_conn_param)) {
       dbname <- pg_conn_param["dbname"][[1]]
       user <- pg_conn_param["user"][[1]]
-      src <- glue::glue("\"PG:dbname={single_quote(dbname)} user={single_quote(user)}\"")
+      host <- pg_conn_param["host"][[1]]
+      password <- pg_conn_param["password"][[1]]
+      port <- pg_conn_param["port"][[1]]
+      src <- glue::glue("\"PG:dbname={single_quote(dbname)} user={single_quote(user)} host={single_quote(host)} port={single_quote(port)} password={single_quote(password)}\"")
     }
   dst_ras_filename <- file.path(out_tif_path, out_tif_name)
 
@@ -91,6 +94,7 @@ print(sql)
   print(system2('gdal_rasterize',args = c(datatype, comp, value, proj, extent_string, cell_size, src, dst_ras_filename, sql, nodata), stderr = TRUE))
 
   print('Raster created successfully.')
+  print(glue("src = {src}") )
   return(dst_ras_filename)
 
 }
