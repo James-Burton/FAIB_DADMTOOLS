@@ -21,7 +21,7 @@
 #'   warning(glue::glue("MULTISURFACE geometry detected in {in_gdb}/{in_fc}. Data may not import correctly."))
 #' }
 check_multisurface_gdb <- function(gdb_path, layer_name, nrow = 1000) {
-  geom_candidates <- c("Shape", "Geom","GEOMETRY","GEOM","Geometry","SHAPE")
+  geom_candidates <- c("geom","Shape", "Geom","GEOMETRY","GEOM","Geometry","SHAPE")
 
   for (geom_col in geom_candidates) {
     sql_query <- sprintf("SELECT %s FROM \"%s\" limit %s", geom_col, layer_name, nrow)
