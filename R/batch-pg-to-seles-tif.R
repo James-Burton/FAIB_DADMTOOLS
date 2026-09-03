@@ -63,6 +63,6 @@ batch_pg_to_seles_tif <- function(in_csv = "batch_pg_to_seles_tif.csv",
   }
   end_time <- Sys.time()
   duration <- difftime(end_time, start_time, units = "mins")
-  print(glue("Script started at {format(end_time, '%Y-%m-%d %I:%M:%S %p')}"))
+  print(glue("Script ended at {format(end_time, '%Y-%m-%d %I:%M:%S %p')}"))
   print(glue("Script duration: {duration} minutes\n"))
 }
