@@ -107,6 +107,8 @@ import_gr_skey_tif_to_pg_rast <- function(
                   dbname = pg_conn_param["dbname"][[1]],
                   password = pg_conn_param["password"][[1]],
                   port = pg_conn_param["port"][[1]])
+    
+  on.exit(DBI::dbDisconnect(conn), add = TRUE)
   RPostgres::dbExecute(conn, statement = qry1)
 
   if (tolower(geom_type) == 'polygon' | tolower(geom_type) == 'multipolygon' ) {
@@ -118,7 +120,7 @@ import_gr_skey_tif_to_pg_rast <- function(
     print('Geometry type not recognized, default to centroids')
   }
    RPostgres::dbExecute(conn, statement = qry2)
-  RPostgres::dbDisconnect(conn)
+
   tblname <- strsplit(dst_tbl, "\\.")[[1]][[2]]
   run_sql_r(glue("ALTER TABLE {dst_tbl} ADD PRIMARY KEY (gr_skey);"), pg_conn_param)
   run_sql_r(glue("DROP INDEX IF EXISTS {tblname}_gr_skey_idx;"), pg_conn_param)
