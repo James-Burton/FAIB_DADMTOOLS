@@ -61,7 +61,6 @@ rasterize_gdal <- function(
     overlap_where <- glue("WHERE {overlap_where}")
   }
 
-
   value <- glue("-a {field}")
   comp <- '-co COMPRESS=LZW'
   datatype <- glue("-ot {datatype}")
@@ -73,27 +72,35 @@ rasterize_gdal <- function(
     in_lyr <- ''
   }
 
-
-  ################## Old bug###
-  #########################sql <- paste0('-dialect sqlite -sql ', glue::double_quote(glue("With t1 as (SELECT ROW_NUMBER() OVER () AS {field}, * FROM {in_lyr}) select * from t1 {where}")))
-  ################## Old bug###
-  ################## Old bug###
-  ################## Old bug###
-  ################## Old bug###sql <- paste0('-dialect sqlite -sql ', glue::double_quote(glue("SELECT ROW_NUMBER() OVER () AS {field}, *  from {in_lyr} {where}")))
-
-   sql <- paste0('-dialect sqlite -sql ', glue::double_quote(glue("SELECT * FROM (SELECT ROW_NUMBER() OVER () AS {field},* FROM {in_lyr} {where} ) AS numbered {overlap_where} ")))
-print(sql)
-
-sql <- paste0('-dialect sqlite -sql ', glue::double_quote(glue("With t1 as (SELECT ROW_NUMBER() OVER () AS {field},* FROM {in_lyr}), t2 as (select * from t1 {where}) select * from t2 {overlap_where} ")))
-print(sql)
-
+  sql <- paste0('-dialect sqlite -sql ', glue::double_quote(glue("With t1 as (SELECT ROW_NUMBER() OVER () AS {field},* FROM {in_lyr}), t2 as (select * from t1 {where}) select * from t2 {overlap_where} ")))
+  print(sql)
 
   nodata <- glue('-a_nodata ', nodata)
   print(glue("Writing raster: {dst_ras_filename} using datatype: {datatype}"))
   print(paste('gdal_rasterize', datatype, comp, value, proj, extent_string, cell_size, src, dst_ras_filename, sql, nodata))
-  print(system2('gdal_rasterize',args = c(datatype, comp, value, proj, extent_string, cell_size, src, dst_ras_filename, sql, nodata), stderr = TRUE))
+  ret <- system2(
+    'gdal_rasterize',
+    args = c(
+      datatype,
+      comp,
+      value,
+      proj,
+      extent_string,
+      cell_size,
+      src,
+      dst_ras_filename,
+      sql,
+      nodata
+    ),
+    stderr = TRUE
+  )
 
-  print('Raster created successfully.')
+  if (ret != 0) {
+    stop("gdal_rasterize failed with exit status ", ret)
+  }
+
+  print("Raster created successfully.")
+
   print(glue("src = {src}") )
   return(dst_ras_filename)
 
