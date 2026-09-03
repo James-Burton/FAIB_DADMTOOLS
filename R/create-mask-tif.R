@@ -27,16 +27,16 @@ create_mask_tif <- function(
 
   dest <- file.path(out_tif_path, out_tif_name)
 
-  if( !is.null(in_lyr)){
+  if (!is.null(in_lyr)) {
     in_vect <- terra::vect(x = in_src,layer = in_lyr)
-  }else{
+  } else {
     in_vect <- terra::vect(x = in_src)
 
   }
 
   template_rast <- terra::rast(template)
   rast_band <- terra::rasterize(in_vect, template_rast, field = field, datatype = datatype)
-  if( !is.null(crop_extent)){
+  if (!is.null(crop_extent)) {
     rast_band <-  terra::crop(rast_band, crop_extent, datatype = datatype)}
 
   rast_band[!is.na(rast_band)]  <- 1
