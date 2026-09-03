@@ -34,19 +34,30 @@ rasterize_terra <- function(src_sf,
     file.remove(dest_tif)
   }
 
-  if( !is.null(src_lyr)) {
+  if (!is.null(src_lyr)) {
     in_vect <- terra::vect(x = src_sf, layer = src_lyr)
   } else {
     in_vect <- terra::vect(x = src_sf)
-
   }
-
 
   template_rast <- terra::rast(template_tif)
   print(glue("Rasterizing field: {field} using datatype: {datatype}"))
   rast_band <- terra::rasterize(in_vect, template_rast, field = field, wopt = list(datatype = datatype))
-  if( !is.null(crop_extent)) {
-    rast_band <-  terra::crop(rast_band, crop_extent, datatype = datatype)
+
+
+  # Potential issue, Terra is xmin xmax ymin ymax but we use xmin ymax xmax ymin we may want to force extent to proper terra form
+  ## This is here incase we need it. I dont know where or when we call this function so I wont implement it yet jamburto sept 3 2026
+  # crop_ext <- terra::ext(
+    # crop_extent[1],  # xmin
+    # crop_extent[3],  # xmax
+    # crop_extent[4],  # ymin
+    # crop_extent[2]   # ymax
+  # )
+
+  # rast_band <- terra::crop(rast_band, crop_ext)
+  
+  if (!is.null(crop_extent)) {
+    rast_band <- terra::crop(rast_band, crop_extent, datatype = datatype)
     }
   print(glue("Writing raster: {dest_tif} using datatype: {datatype}"))
   terra::writeRaster(rast_band, dest_tif, datatype = datatype, overwrite = TRUE, NAflag = nodata)
@@ -55,12 +66,3 @@ rasterize_terra <- function(src_sf,
   print('Raster created successfully.')
   return(dest_tif)
 }
-
-
-
-
-
-
-
-
-
