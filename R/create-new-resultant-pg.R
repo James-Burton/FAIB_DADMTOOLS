@@ -16,7 +16,6 @@
 #'    pg_conn_param             = dadmtools::get_pg_conn_list()
 #')
 
-
 create_new_resultant_pg  <- function(
     in_csv                    = "create_new_resultant_inputs.csv",
     resultant_name,
@@ -25,9 +24,7 @@ create_new_resultant_pg  <- function(
 )
 
 {
-
   #### get resultant_name without schema
-
   if (grepl("\\.", resultant_name)) {
     resultant_table_schema <- strsplit(resultant_name, "\\.")[[1]][[1]]
     resultant_table_no_schema <- strsplit(resultant_name, "\\.")[[1]][[2]]
@@ -60,7 +57,6 @@ create_new_resultant_pg  <- function(
   table_alias_counter <- 1
   on_joins = ""
 
-
   start_time <- Sys.time()
   print(glue("Script started at {format(start_time, '%Y-%m-%d %I:%M:%S %p')}"))
   in_file <- read.csv(in_csv)
@@ -78,8 +74,6 @@ create_new_resultant_pg  <- function(
     key_attribute_tbl         <- gsub("[[:space:]]","",tolower(in_file[row, "key_field_attribute_table"]))
     notes                     <- in_file[row, "notes"]
 
-
-
     #### get gr_skey_table without schema
     if (grepl("\\.", gr_skey_table)) {
       gr_skey_table_schema <- strsplit(gr_skey_table, "\\.")[[1]][[1]]
@@ -91,7 +85,7 @@ create_new_resultant_pg  <- function(
     }
 
     #### get attribute_table without schema
-    if(!dadmtools::is_blank(attribute_table)){
+    if (!dadmtools::is_blank(attribute_table)){
       if (grepl("\\.", attribute_table)) {
         attribute_table_schema <- strsplit(attribute_table, "\\.")[[1]][[1]]
         attribute_table_no_schema <- strsplit(attribute_table, "\\.")[[1]][[2]]
@@ -105,11 +99,8 @@ create_new_resultant_pg  <- function(
       attribute_table_no_schema <- gr_skey_table_no_schema
     }
 
-
-
     #### Get vector list of all fields (minus keys) if all input fields are selected indicated by a *
     if (included_fields == "*") {
-
 
       qry <- glue("SELECT column_name
           FROM information_schema.columns
@@ -139,37 +130,32 @@ create_new_resultant_pg  <- function(
       }
     }
 
-
-    if(dadmtools::is_blank(prefix)) {
+    if (dadmtools::is_blank(prefix)) {
       prefix <- NULL
     }
 
 
 
-    if(dadmtools::is_blank(notes)) {
+    if (dadmtools::is_blank(notes)) {
       notes <- NULL
     }
 
-    if(dadmtools::is_blank(attribute_table)) {
+    if (dadmtools::is_blank(attribute_table)) {
       attribute_table <- NULL
     }
 
-
-
-
-    if(is.null(key_attribute_tbl) && !is.null(attribute_table)) {
+    if (is.null(key_attribute_tbl) && !is.null(attribute_table)) {
       print("ERROR: key_attribute_tbl not provided while attribute_table is populated")
       stop()
     }
 
-    if(dadmtools::is_blank(update_field_names)) {
+    if (dadmtools::is_blank(update_field_names)) {
       update_field_names <- NULL
     } else {
       update_field_names <- unlist(strsplit(update_field_names, ","))
     }
 
     included_fields <- unlist(strsplit(included_fields, ","))
-
 
     #### Ensure update_field_names and included_fields are the same length
     if (!is.null(update_field_names) ) {
@@ -178,7 +164,6 @@ create_new_resultant_pg  <- function(
         stop()
       }
     }
-
 
     #### retrieve all fields from attribute_table if exists, otherwise from gr_skey_table
     if (!is.null(attribute_table)) {
@@ -189,7 +174,6 @@ create_new_resultant_pg  <- function(
       join_table_fields_all <- dadmtools::sql_to_df(join_table_fields_query,pg_conn_param)$column_name
     }
 
-
     #### ensure that included fields are within join_table_fields_all (i.e. fields from attribute_table if exists, otherwise from gr_skey_table)
     if (!(all(sapply(included_fields, function(x) (x %in%  join_table_fields_all))))) {
       included_fields_str <- paste(included_fields, collapse = ", ")
@@ -199,8 +183,6 @@ create_new_resultant_pg  <- function(
         print(glue("WARNING: input_fields_to_include: {included_fields_str} are not all in gr_skey_table: {gr_skey_table}"))
       }
     }
-
-
 
     ## ensure update_field_names is a valid vector
     if (!is.null(update_field_names)) {
@@ -218,29 +200,24 @@ create_new_resultant_pg  <- function(
       validate_vector(update_field_names)
     }
 
-
-
-
 ###ACCUMULATE JOIN CLAUSE#########################################
 ###############################################
 
-    table_alias_gr_skey <- paste0("tblg", as.character(table_alias_counter) )
-    if(is_blank(attribute_table) ){
-      table_alias_att <- paste0("tblg", as.character(table_alias_counter) )
-    }else{
-    table_alias_att <- paste0("tbl", as.character(table_alias_counter) )}
+    table_alias_gr_skey <- paste0("tblg", as.character(table_alias_counter))
+    if (is_blank(attribute_table)) {
+      table_alias_att <- paste0("tblg", as.character(table_alias_counter))
+    } else {
+    table_alias_att <- paste0("tbl", as.character(table_alias_counter))
+    }
 
     gr_skey_table_join <- glue("left join {gr_skey_table_schema}.{gr_skey_table_no_schema} {table_alias_gr_skey} on a.{key_field_resultant_table} = {table_alias_gr_skey}.{key_grskey_tbl}")
-
 
     if(is_blank(attribute_table) ){
       attribute_table_join <- " "}else{
     attribute_table_join <- glue("left join {attribute_table_schema}.{attribute_table_no_schema} {table_alias_att} on {table_alias_att}.{key_attribute_tbl} = {table_alias_gr_skey}.{key_attribute_tbl}")}
 
-
     gr_skey_table_join_string_accumulator <- c(gr_skey_table_join_string_accumulator, gr_skey_table_join)
     attribute_table_join_string_accumulator <- c(attribute_table_join_string_accumulator, attribute_table_join)
-
 
 ##################################################################
 ##ACCUMULATE FIELDS##############################
@@ -248,20 +225,19 @@ create_new_resultant_pg  <- function(
     #### remove resultant keys (ie. gr_skey) from included_fields or update_field_names if in the final field names
     if (is.null(update_field_names)){
       indices_to_remove <- which(included_fields == key_field_resultant_table)
-      if (length(indices_to_remove > 0)){
+      if (length(indices_to_remove) > 0) {
         included_fields <- included_fields[-indices_to_remove]
       }
     } else {
       indices_to_remove <- which(update_field_names == key_field_resultant_table)
       #### remove key_field_resultant_table (ie. gr_skey) from included_fields & update_field_names
-      if (length(indices_to_remove > 0)) {
+      if (length(indices_to_remove) > 0) {
         included_fields <- included_fields[-indices_to_remove]
       }
-      if (length(indices_to_remove > 0)) {
+      if (length(indices_to_remove) > 0) {
         update_field_names <- update_field_names[-indices_to_remove]
       }
     }
-
 
   #### Create field name accumulator
     if (dadmtools::is_blank(prefix)) {
@@ -299,7 +275,6 @@ create_new_resultant_pg  <- function(
     attribute_table_accumulator <- c(attribute_table_accumulator,glue("{attribute_table_schema}.{attribute_table_no_schema}"))
     gr_skey_table_accumulator <- c(gr_skey_table_accumulator,gr_skey_table )
     table_alias_counter <- table_alias_counter + 1
-
 }
 
 #####Create a temp resultant table with gr-skey from all the tables
@@ -310,7 +285,6 @@ create_new_resultant_pg  <- function(
   qry <- glue("CREATE TABLE {resultant_name_temp} AS  ",
               paste(paste0("(SELECT gr_skey FROM ", gr_skey_table_accumulator, ")"), collapse = " UNION"))
   dadmtools::run_sql_r(qry,pg_conn_param)
-
 
 #####Create final table using the final_full_select_field_name_accumulator,attribute_table_join_string_accumulator, and
 #####gr_skey_table_join_string_accumulator
@@ -326,7 +300,6 @@ dadmtools::run_sql_r(qry, pg_conn_param)
 
 #Create index
 run_sql_r(glue("ALTER TABLE {resultant_name} ADD PRIMARY KEY ({key_field_resultant_table});"), pg_conn_param)
-
 
 #add metadata
 attribute_tables <- paste(attribute_table_accumulator, collapse = ",")
@@ -348,7 +321,6 @@ qry <- glue("CREATE TABLE IF NOT EXISTS  {resultant_name}_data_sources (
 
 run_sql_r(qry, pg_conn_param)
 
-
 for (i in seq_along( included_fields_accumulator   )) {
   field_names_val <- final_field_alias_accumulator[i]
   src_field_names_val <- included_fields_accumulator[i]
@@ -361,21 +333,16 @@ for (i in seq_along( included_fields_accumulator   )) {
                       '{as.character(src_field_names_val)}', '{src_attribute_table_name}',
                       '{src_grskey_table_name}');")
   dadmtools::run_sql_r(query, pg_conn_param)
-
 }
+                     
 dadmtools::run_sql_r(glue("ANALYZE {resultant_name}_data_sources;"), pg_conn_param)
-
 
 #drop temp table
 qry <- glue("DROP TABLE IF EXISTS {resultant_name_temp}; ")
 dadmtools::run_sql_r(qry, pg_conn_param)
-
-
-
-
   end_time <- Sys.time()
   duration <- difftime(end_time, start_time, units = "mins")
-  print(glue("Script started at {format(end_time, '%Y-%m-%d %I:%M:%S %p')}"))
+  print(glue("Script ended at {format(end_time, '%Y-%m-%d %I:%M:%S %p')}"))
   print(glue("Script duration: {duration} minutes\n"))
   return(resultant_name)
 }
