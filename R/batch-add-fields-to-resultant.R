@@ -120,6 +120,6 @@ batch_add_fields_to_resultant  <- function(
   }
   end_time <- Sys.time()
   duration <- difftime(end_time, start_time, units = "mins")
-  print(glue("Script started at {format(end_time, '%Y-%m-%d %I:%M:%S %p')}"))
-  print(glue("Script duration: {duration} minutes\n"))
+  print(glue("Script ended at {format(end_time, '%Y-%m-%d %I:%M:%S %p')}"))
+  print(glue("Script duration: {round(as.numeric(duration), 2)} minutes"))
 }
