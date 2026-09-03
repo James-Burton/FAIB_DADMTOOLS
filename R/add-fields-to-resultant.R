@@ -137,16 +137,16 @@ add_fields_to_resultant  <- function(
   #### remove resultant keys (ie. gr_skey) from included_fields or update_field_names if in the final field names
   if (is.null(update_field_names)){
     indices_to_remove <- which(included_fields == key_resultant_tbl)
-    if (length(indices_to_remove > 0)){
+    if (length(indices_to_remove) > 0){
       included_fields <- included_fields[-indices_to_remove]
     }
   } else {
     indices_to_remove <- which(update_field_names == key_resultant_tbl)
     #### remove key_resultant_tbl (ie. gr_skey) from included_fields & update_field_names
-    if (length(indices_to_remove > 0)) {
+    if (length(indices_to_remove) > 0) {
       included_fields <- included_fields[-indices_to_remove]
     }
-    if (length(indices_to_remove > 0)) {
+    if (length(indices_to_remove) > 0) {
       update_field_names <- update_field_names[-indices_to_remove]
     }
   }
