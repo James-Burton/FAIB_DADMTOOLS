@@ -202,7 +202,7 @@ import_to_pg_gr_skey <- function(
   }
 
   ## if user did not specify grskey_schema, overwrite grskey_schema with dst_schema
-  if(is.null(grskey_schema)){
+  if (is.null(grskey_schema)){
     grskey_schema <- dst_schema
     dst_gr_skey_tbl <- glue("{dst_tbl}_gr_skey")
   } else {
@@ -210,7 +210,7 @@ import_to_pg_gr_skey <- function(
   }
 
   ## if overlap, give gr_skey table  a different name
-  if(overlap_ind){
+  if (overlap_ind){
     dst_gr_skey_tbl <- glue("{dst_gr_skey_tbl}_overlap")
   }
 
@@ -225,7 +225,7 @@ import_to_pg_gr_skey <- function(
       return()
     }
     contains_multisurface <- dadmtools::check_multisurface_gdb(src_path,src_lyr)
-    if(contains_multisurface){
+    if (contains_multisurface){
       multisurface_error <- glue("ERROR: Invalid GEOMETRY in {src_path} | layername = {src_lyr}. Layer was not imported. Please fix invalid geometry by fixing or removing arc, curves or other complex geometry. Hint exporting data to shapefile may help fix this issue.")
       print(multisurface_error)
       cat('Carrying on to next import...\n')
@@ -242,14 +242,16 @@ import_to_pg_gr_skey <- function(
                     dbname   = pg_conn_param["dbname"][[1]],
                     password = pg_conn_param["password"][[1]],
                     port     = pg_conn_param["port"][[1]])
-
-  if(query == '' || is.null(query) || is.na(query)) {
+  
+  on.exit(DBI::dbDisconnect(connz), add = TRUE)
+  
+  if (query == '' || is.null(query) || is.na(query)) {
     query_escaped <- ''
   } else {
     query_escaped <- gsub("\'","\'\'", query)
   }
 
-  if(tolower(src_type) != 'raster') {
+  if (tolower(src_type) != 'raster') {
     dst_tbl_comment <- glue("COMMENT ON TABLE {dst_schema}.{dst_tbl} IS 'Table created by the dadmtools R package at {today_date}.
                                               TABLE relates to {grskey_schema}.{dst_gr_skey_tbl}
                                               Data source details:
@@ -287,7 +289,6 @@ import_to_pg_gr_skey <- function(
     where_claus <- query
   }
 
-
   if(tolower(src_type) != 'raster') {
 
     if(tolower(src_type) == 'oracle'){
@@ -298,13 +299,6 @@ import_to_pg_gr_skey <- function(
       ## Create a FDW table in PG
       fklyr <- create_oracle_fdw_in_pg(src_lyr, ora_conn_param, pg_conn_param, 'oradb', fdw_schema)
 
-      connz <- dbConnect(pg_conn_param["driver"][[1]],
-                       host     = pg_conn_param["host"][[1]],
-                       user     = pg_conn_param["user"][[1]],
-                       dbname   = pg_conn_param["dbname"][[1]],
-                       password = pg_conn_param["password"][[1]],
-                       port     = pg_conn_param["port"][[1]])
-      on.exit(RPostgres::dbDisconnect(connz))
       # =============================================================================
       # Create Non Spatial Table with attributes from FDW
       # =============================================================================
@@ -326,7 +320,7 @@ import_to_pg_gr_skey <- function(
       # Create GR SKEY Spatial Table
       # =============================================================================
 
-      if(overlap_ind) {
+      if (overlap_ind) {
         select_flds <- paste0(c(pk_id,paste0('non_spatial.',strsplit(overlap_group_fields, ",")[[1]])),collapse = ",")
       } else {
         select_flds <- pk_id
@@ -350,7 +344,7 @@ import_to_pg_gr_skey <- function(
           in_sf <- st_cast(st_read(connz, query = qry, crs = 3005),i ),
           error=function(e) e
         )
-        if(inherits(possible_error, "error")) next else {
+        if (inherits(possible_error, "error")) next else {
           break
         }
       }
@@ -406,7 +400,7 @@ import_to_pg_gr_skey <- function(
           )
 
           if (is.null(in_df)){
-            print("ERROR: Could not coonvert Raster to GR_SKEY table")
+            print("ERROR: Could not convert Raster to GR_SKEY table")
             return()
           }
 
@@ -463,9 +457,6 @@ import_to_pg_gr_skey <- function(
                             dst_schema    = dst_schema,
                             tbl_comment   = dst_tbl_comment
                             )
-
-
-
 
       print("Table created successfully.")
 
