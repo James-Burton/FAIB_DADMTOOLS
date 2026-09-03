@@ -45,7 +45,7 @@ get_sql_fdw_id_geom<- function(dst_tbl,
   }
 
 
-  con <-  DBI::dbConnect(pg_conn_param["driver"][[1]])
+  ## con <-  DBI::dbConnect(pg_conn_param["driver"][[1]])
 
   sqlstmt <- glue("
   WITH fdw_w_geom_and_where_clause AS (
