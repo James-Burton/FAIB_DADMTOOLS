@@ -6,8 +6,9 @@
 #' @examples coming soon
 
 
-lowercase_df_colnames <- function(df){
-  names(df) <- gsub(x = tolower(names(df)), pattern = "\\.", replacement = "_")
-  return(df)
-
+lowercase_df_colnames <- function(df) {
+  names(df) <- tolower(names(df))
+  names(df) <- gsub("\\.", "_", names(df))
+  names(df) <- gsub("[^a-z0-9_]", "_", names(df))
+  df
 }
