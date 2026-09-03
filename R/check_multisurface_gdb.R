@@ -1,7 +1,16 @@
-#' Check for MULTISURFACE or other unsupported geometry types in a File Geodatabase.
+#' Check for MULTISURFACE geometry in a File Geodatabase.
+#'
+#' Reads a sample of features from a File Geodatabase layer and checks whether
+#' any features have `MULTISURFACE` geometry.
+#'
 #' @param gdb_path Character. The full file path to the File Geodatabase (.gdb).
-#' @param Character. The name of the feature class (layer) within the geodatabase to check.
-#' @param nrow Logical. Returns `TRUE` if unsupported geometry types like `MULTISURFACE` are detected; `FALSE` otherwise.
+#' @param layer_name Character. The name of the feature class (layer) within
+#'   the geodatabase to check.
+#' @param nrow Integer. The maximum number of features to read and check.
+#'   Defaults to 1000.
+#'
+#' @return Logical. Returns `TRUE` if `MULTISURFACE` geometry is detected;
+#'   otherwise returns `FALSE`.
 #'
 #' @export
 #'
@@ -18,25 +27,19 @@
 #' if (!check_geom) {
 #'   message(glue::glue("No MULTISURFACE geometry found in {in_gdb}/{in_fc}"))
 #' } else {
-#'   warning(glue::glue("MULTISURFACE geometry detected in {in_gdb}/{in_fc}. Data may not import correctly."))
+#'   warning(glue::glue(
+#'     "MULTISURFACE geometry detected in {in_gdb}/{in_fc}. ",
+#'     "Data may not import correctly."
+#'   ))
 #' }
 check_multisurface_gdb <- function(gdb_path, layer_name, nrow = 1000) {
-  geom_candidates <- c("geom","Shape", "Geom","GEOMETRY","GEOM","Geometry","SHAPE")
 
-  for (geom_col in geom_candidates) {
-    sql_query <- sprintf("SELECT %s FROM \"%s\" limit %s", geom_col, layer_name, nrow)
+  result <- st_read(
+    dsn = gdb_path,
+    layer = layer_name,
+    quiet = TRUE,
+    n_max = nrow
+  )
 
-    # Try reading using this geometry column
-    result <- try(
-      st_read(dsn = gdb_path, query = sql_query, quiet = TRUE),
-      silent = TRUE
-    )
-
-    if (inherits(result, "sf")) {
-      # Success! Now check for MultiSurface
-      return(any(st_geometry_type(result) == "MULTISURFACE"))
-    }
-  }
-
-  stop("WARNING: Could not find known geometry column names (shape, geom, geometry) in layer. Unable to check layer for invalid geometry. Review input feature class with geotiff specified in <out_tif_path>.")
+  any(st_geometry_type(result) == "MULTISURFACE")
 }
